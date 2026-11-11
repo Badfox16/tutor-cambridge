@@ -1,0 +1,34 @@
+# Run profiles for the marker (and later the tutor/evals).
+# Pick one with:  python -m tutor.marker run --profile <name>
+# Any CLI flag (--model, --prompt, --think, --limit, --repeats) overrides the
+# profile's value, so you can experiment without editing this file.
+#
+# One change at a time between runs (model OR prompt OR think) — record it in
+# the run notes so the dashboard comparison stays honest.
+
+[default]
+model = "qwen3.5:9b"        # exact Ollama tag
+prompt = "marker-compact"   # file name in tutor/prompts/ (without .txt)
+think = "off"               # "off" | "on" (reasoning mode; never shown to the student)
+temperature = 0.2
+num_ctx = 8192
+max_tokens = 1024
+keep_alive = "10m"          # keep the model loaded between calls
+repeats = 1                 # mark each answer N times (repeat consistency)
+limit = 0                   # 0 = all open answers in the run
+
+# --- example profiles: edit freely, or add new ones -------------------------
+
+[gemma-fast]
+model = "gemma4:e4b"
+prompt = "marker-compact"
+
+[qwen-full-prompt]
+model = "qwen3.5:9b"
+prompt = "marker-full"
+
+[qwen-thinking]
+model = "qwen3.5:9b"
+prompt = "marker-compact"
+think = "on"
+max_tokens = 2048

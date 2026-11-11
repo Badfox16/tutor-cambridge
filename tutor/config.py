@@ -49,7 +49,58 @@ HINT_MAX_WORDS = int(_get("TUTOR_HINT_MAX_WORDS", "120"))
 
 DB_PATH = Path(_get("TUTOR_DB_PATH", str(ROOT / "data" / "tutor.db")))
 
+PROFILES_PATH = Path(_get("TUTOR_PROFILES", str(ROOT / "profiles.toml")))
+DEFAULT_PROFILE = _get("TUTOR_PROFILE", "default")
+
 HTTP_TIMEOUT = float(_get("TUTOR_HTTP_TIMEOUT", "120"))
+
+PROFILE_KEYS = ("model", "prompt", "think", "temperature", "num_ctx",
+                "max_tokens", "keep_alive", "repeats", "limit")
+
+
+def load_profiles(path: Path | None = None) -> dict[str, dict]:
+    """Read profiles.toml; every profile inherits [default], unknown keys ignored."""
+    import tomllib
+
+    path = path or PROFILES_PATH
+    try:
+        raw = tomllib.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {}
+    base = {k: v for k, v in (raw.get("default") or {}).items() if k in PROFILE_KEYS}
+    profiles: dict[str, dict] = {}
+    for name, values in raw.items():
+        if not isinstance(values, dict):
+            continue
+        merged = dict(base)
+        merged.update({k: v for k, v in values.items() if k in PROFILE_KEYS})
+        profiles[name] = merged
+    return profiles
+
+
+def resolve_profile(name: str | None = None, overrides: dict | None = None,
+                    path: Path | None = None) -> dict:
+    """Named profile (falling back to [default] and then env/config defaults),
+    with CLI overrides applied on top. Raises KeyError for an unknown profile."""
+    profiles = load_profiles(path)
+    name = name or DEFAULT_PROFILE
+    if profiles and name not in profiles:
+        raise KeyError(f"unknown profile '{name}' (available: {', '.join(sorted(profiles))})")
+    resolved = dict(profiles.get(name) or profiles.get("default") or {})
+    resolved.setdefault("model", TUTOR_MODEL)
+    resolved.setdefault("prompt", "marker-full")
+    resolved.setdefault("think", "off")
+    resolved.setdefault("temperature", TEMPERATURE)
+    resolved.setdefault("num_ctx", NUM_CTX)
+    resolved.setdefault("max_tokens", MAX_TOKENS)
+    resolved.setdefault("keep_alive", KEEP_ALIVE)
+    resolved.setdefault("repeats", 1)
+    resolved.setdefault("limit", 0)
+    for key, value in (overrides or {}).items():
+        if value is not None:
+            resolved[key] = value
+    resolved["name"] = name
+    return resolved
 
 
 def git_state() -> tuple[str, bool]:

@@ -59,24 +59,30 @@ class OllamaProvider:
     """Ollama native chat endpoint. Streams by default to measure TTFT."""
 
     def __init__(self, model: str | None = None, base_url: str | None = None,
-                 keep_alive: str | None = None):
+                 keep_alive: str | None = None, *, temperature: float | None = None,
+                 num_ctx: int | None = None, max_tokens: int | None = None):
         self.model = model or config.TUTOR_MODEL
         self.base = (base_url or config.OLLAMA_BASE).rstrip("/")
         self.keep_alive = keep_alive or config.KEEP_ALIVE
+        # per-instance option defaults (used when chat() gets no explicit value)
+        self.temperature = temperature
+        self.num_ctx = num_ctx
+        self.max_tokens = max_tokens
 
     def chat(self, messages: list[dict], *, think: bool = False,
              temperature: float | None = None, num_ctx: int | None = None,
              max_tokens: int | None = None, stream: bool = True) -> LLMResult:
+        options = {
+            "temperature": self.temperature if temperature is None else temperature,
+            "num_ctx": self.num_ctx if num_ctx is None else num_ctx,
+            "num_predict": self.max_tokens if max_tokens is None else max_tokens,
+        }
         body = {
             "model": self.model,
             "messages": messages,
             "stream": stream,
             "think": think,
-            "options": {
-                "temperature": config.TEMPERATURE if temperature is None else temperature,
-                "num_ctx": config.NUM_CTX if num_ctx is None else num_ctx,
-                "num_predict": config.MAX_TOKENS if max_tokens is None else max_tokens,
-            },
+            "options": {k: v for k, v in options.items() if v is not None},
             "keep_alive": self.keep_alive,
         }
         t0 = time.perf_counter()
