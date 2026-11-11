@@ -95,6 +95,16 @@ cases (baseline a bater). Scores detalhados só existem para run **open fechada*
 - **Resultado:** CLI `--profile` + overrides; perfil, temperatura, num_ctx, think e prompt completo ficam gravados na run (SQLite + Lab).
 - **Conclusão:** infraestrutura (não afeta métricas); de agora em diante toda entrada do diário cita o **perfil** usado.
 
+### [6] 2026-11-11 — M4 backend do tutor (escada de pistas + leak check + streaming)
+- **Motivo:** marco M4 — sessão do aluno com feedback socrático, sem vazar o scheme.
+- **O que mudou:** `tutor/tutor.py` (pipeline de turno: marking interno → feedback → leak check → fallback), `tutor/leak.py` (3 heurísticas determinísticas, sem LLM), prompt `tutor.txt` (curto, PT), streaming NDJSON em `/api/sessions/{id}/answer` e `/reveal`; rotas `/api/questions`, `/api/sessions*`, `/api/turns/{id}/rating`; cache de questões em SQLite (`question_cache`) para funcionar offline após a 1ª busca.
+- **Escada de pistas:** tentativa 1→nível 0, 2→1, 3→2, 4+/reveal→3; "dar outra pista" soma +1 (cap 3).
+- **Leak check:** (a) valor final A1 do scheme no feedback com nível<3; (b) n-grama de 6 palavras copiado do scheme; (c) linha "MARK SCHEME" (qualquer nível). Vazou → 1 regeneração com instrução rígida → ainda vazou → pergunta-guia genérica pré-escrita (contabilizado em `leak_flag`/`regenerated`).
+- **Teste de contrato:** suíte automatizada garante que **nenhuma** rota do aluno devolve texto de scheme (`test_contract_student.py`).
+- **Ambiente:** 75 testes offline OK (fakes). Lab online anotado (`http://102.202.45.215:3000`, mais questões; runs lá contam para a avaliação final — usar só com autorização do usuário).
+- **Conclusão:** infraestrutura do tutor pronta; qualidade do feedback (juiz, tamanho, PT) será medida no M6.
+- **Nota de higiene:** não usar schemes de questões avaliadas como exemplos few-shot do tutor.
+
 ---
 
 *Próximas entradas entram acima desta linha, com a comparação run vs. run.*

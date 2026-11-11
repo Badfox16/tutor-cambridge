@@ -71,7 +71,11 @@ class OllamaProvider:
 
     def chat(self, messages: list[dict], *, think: bool = False,
              temperature: float | None = None, num_ctx: int | None = None,
-             max_tokens: int | None = None, stream: bool = True) -> LLMResult:
+             max_tokens: int | None = None, stream: bool = True,
+             on_chunk=None) -> LLMResult:
+        """`on_chunk(piece)` fires per content piece (streaming) or once with
+        the full text (non-streaming) — used to stream feedback to the student.
+        Thinking pieces are never passed through."""
         options = {
             "temperature": self.temperature if temperature is None else temperature,
             "num_ctx": self.num_ctx if num_ctx is None else num_ctx,
@@ -87,8 +91,8 @@ class OllamaProvider:
         }
         t0 = time.perf_counter()
         if stream:
-            return self._chat_stream(body, t0)
-        return self._chat_once(body, t0)
+            return self._chat_stream(body, t0, on_chunk)
+        return self._chat_once(body, t0, on_chunk)
 
     # -- internals -------------------------------------------------------------
     def _post(self, path: str, body: dict, timeout: float | None = None) -> urllib.request.Request:
@@ -99,16 +103,18 @@ class OllamaProvider:
             method="POST",
         )
 
-    def _chat_once(self, body: dict, t0: float) -> LLMResult:
+    def _chat_once(self, body: dict, t0: float, on_chunk=None) -> LLMResult:
         data = self._send_with_retries(self._post("/api/chat", body))
         msg = data.get("message") or {}
         result = _metrics_from_final(data, t0)
         result.text = msg.get("content") or ""
         result.thinking_chars = len(msg.get("thinking") or "")
         result.raw = data
+        if on_chunk and result.text:
+            on_chunk(result.text)
         return result
 
-    def _chat_stream(self, body: dict, t0: float) -> LLMResult:
+    def _chat_stream(self, body: dict, t0: float, on_chunk=None) -> LLMResult:
         req = self._post("/api/chat", body)
         text_parts: list[str] = []
         thinking = 0
@@ -130,6 +136,8 @@ class OllamaProvider:
                     if ttft is None:
                         ttft = (time.perf_counter() - t0) * 1000.0
                     text_parts.append(piece)
+                    if on_chunk:
+                        on_chunk(piece)
                 thinking += len(msg.get("thinking") or "")
                 if chunk.get("done"):
                     final = chunk

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import sqlite3
 import time
@@ -72,7 +73,16 @@ CREATE TABLE IF NOT EXISTS sessions (
     student_label TEXT NOT NULL DEFAULT '',
     question_id TEXT NOT NULL,
     started_at TEXT NOT NULL,
-    ended_at TEXT
+    ended_at TEXT,
+    hint_bump INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS question_cache (
+    question_id TEXT PRIMARY KEY,
+    dataset_version INTEGER,
+    payload_json TEXT NOT NULL,      -- safe question (what the student sees)
+    scheme_json TEXT NOT NULL,       -- full scheme; never leaves the backend
+    fetched_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS turns (
@@ -120,7 +130,16 @@ def connect(path: Path, *, check_same_thread: bool = True) -> sqlite3.Connection
 
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA)
+    _migrate(conn)
     conn.commit()
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Tiny in-place migrations for databases created by older versions."""
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(sessions)")}
+    if "hint_bump" not in cols:
+        with contextlib.suppress(sqlite3.OperationalError):
+            conn.execute("ALTER TABLE sessions ADD COLUMN hint_bump INTEGER NOT NULL DEFAULT 0")
 
 
 def now() -> str:

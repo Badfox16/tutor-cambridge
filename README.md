@@ -10,7 +10,8 @@ com modelos rodando via Ollama e dataset/notas vindas do **Marking Lab**
 - [x] **M1** Esqueleto: `tutor/{config,db,lab,llm,trace,server}.py`, servidor em `TUTOR_PORT` (8780), SQLite em `data/tutor.db`, métricas do Ollama em `llm.py`; testes com Ollama/Lab falsos (`tests/`).
 - [x] **M2** Marker: `tutor/{render,parse,marker}.py`, run completa contra o Lab (limit 20 com `qwen3.5:9b`: 0 parse failures, acordo 55%, bias −1.2); perfis em `profiles.toml`.
 - [x] **M3** Painel v1: abas Visão geral, Acurácia, Etapas, Desempenho, Confiabilidade e Explorador de traces (`static/dashboard/`, JS puro + SVG); API de stats em `tutor/stats.py`; exportação CSV/JSON.
-- [ ] M4 backend do tutor · [ ] M5 UI do aluno · [ ] M6 evals · [ ] M7 acabamento
+- [x] **M4** Backend do tutor: sessões, escada de pistas (níveis 0–3), marking interno, leak check determinístico + regeneração + fallback, streaming NDJSON, cache de questões; **teste de contrato garante que nenhuma rota do aluno devolve scheme**. UI do aluno vem no M5.
+- [ ] M5 UI do aluno · [ ] M6 evals · [ ] M7 acabamento
 
 ## Como rodar
 
@@ -60,6 +61,26 @@ qualquer flag da CLI sobrepõe o perfil. Ao experimentar, mude **uma coisa por
 vez** (modelo OU prompt OU think) e anote no `notes` da run.
 
 `/api/health` mostra Ollama, modelo carregado e o datasetVersion do Lab.
+
+## Tutor (modo socrático; scheme nunca sai do backend)
+
+O aluno responde uma questão e recebe feedback por streaming, com escada de
+pistas: tentativa 1 → nível 0 (pergunta-guia), 2 → 1 (aponta a ideia/fórmula),
+3 → 2 (passo a passo sem o último passo), 4/"Mostrar solução" → 3 (solução
+completa). "Dar outra pista" adianta um nível. Um leak check determinístico
+(`tutor/leak.py`) bloqueia vazamento do scheme: valor final A1, n-grama de 6
+palavras copiado, ou a linha "MARK SCHEME" → 1 regeneração → fallback
+pré-escrito. Rotas: `/api/questions`, `POST /api/sessions`,
+`POST /api/sessions/{id}/answer|reveal|hint`, `POST /api/turns/{id}/rating`.
+A UI do aluno (`/student/`) entra no M5.
+
+### Lab online (para as runs de avaliação final)
+
+Além do Lab local (`npm run dev`), existe um Lab online com mais questões:
+`http://102.202.45.215:3000`. Para usá-lo, descomente as linhas do fim de
+`.env.example` e ponha a chave `msk_...` **desse** servidor. Runs feitas lá
+contam para a avaliação final do projeto: mantenha a higiene de experimento
+(split `open`, uma mudança por vez, `notes` na run).
 
 ## Configuração (variáveis de ambiente / .env)
 

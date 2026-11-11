@@ -124,6 +124,20 @@ def run_marker(client: LabClient, provider: OllamaProvider, conn,
     return summary
 
 
+def mark_internal(provider, question: dict, answer_lines: dict, *,
+                  prompt_variant: str = "marker-compact", think: bool = False,
+                  on_chunk=None) -> tuple[dict | None, object]:
+    """Mark one answer against the scheme without the Lab (tutor mode).
+
+    Returns (parsed, llm_result); parsed is None on parse failure.
+    """
+    prompt, _lines = render_marker_prompt(question, answer_lines,
+                                          with_scheme=True, variant=prompt_variant)
+    llm = provider.chat([{"role": "user", "content": prompt}], think=think, on_chunk=on_chunk)
+    parsed, _reason = parse_marker_reply(llm.text, question, answer_lines)
+    return parsed, llm
+
+
 def _mark_one(conn, tr, client, provider, lab_run_id, dataset_version,
               question, answer, prompt_variant, think, repeat, summary) -> None:
     """Render, generate, parse, submit one answer. Failures become spans/data."""

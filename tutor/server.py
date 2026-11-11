@@ -7,16 +7,18 @@ stats routes are added in later milestones.
 from __future__ import annotations
 
 import json
+import re
 import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from . import config, stats
+from . import config, stats, tutor as tutor_pipeline
 from .db import connect, init_db
-from .lab import LabClient
+from .lab import LabClient, LabError
 from .llm import LLMError, OllamaProvider
+from .tutor import TutorError
 
 STATIC_ROOT = Path(__file__).resolve().parent.parent / "static"
 
@@ -202,6 +204,34 @@ def make_handler(*, lab: LabClient | None = None, ollama: OllamaProvider | None 
                 self.end_headers()
                 self.wfile.write(body)
                 return
+            if path == "/api/questions":
+                try:
+                    self.send_json({"questions": tutor_pipeline.list_questions(conn, lab)})
+                except TutorError as e:
+                    self.send_json({"error": str(e)}, e.status)
+                return
+            if path == "/api/sessions":
+                self.send_json({"error": "POST to /api/sessions"}, 405)
+                return
+            if path.startswith("/api/questions/"):
+                qid = path.removeprefix("/api/questions/").split("/")[0]
+                try:
+                    payload, _scheme = tutor_pipeline.fetch_question(conn, lab, qid)
+                    self.send_json({"question": payload})
+                except TutorError as e:
+                    self.send_json({"error": str(e)}, e.status)
+                except LabError as e:
+                    self.send_json({"error": str(e)}, e.status or 502)
+                return
+            session_m = re.fullmatch(r"/api/sessions/(\d+)", path)
+            if session_m:
+                try:
+                    session = tutor_pipeline.get_session(conn, int(session_m.group(1)))
+                    payload, _ = tutor_pipeline.fetch_question(conn, lab, session["question_id"])
+                    self.send_json({"session": session, "question": payload})
+                except TutorError as e:
+                    self.send_json({"error": str(e)}, e.status)
+                return
             if path.startswith("/student/"):
                 self.send_static(path.lstrip("/"))
                 return
@@ -210,7 +240,95 @@ def make_handler(*, lab: LabClient | None = None, ollama: OllamaProvider | None 
                 return
             self.send_json({"error": "not found"}, 404)
 
+        def _read_json(self) -> dict:
+            length = int(self.headers.get("Content-Length", 0) or 0)
+            raw = self.rfile.read(length) if length else b"{}"
+            try:
+                return json.loads(raw or b"{}")
+            except json.JSONDecodeError:
+                raise TutorError("body must be JSON")
+
+        def stream_ndjson(self, run_fn):
+            """NDJSON event stream: {status}, {delta}, {done} / {error}."""
+            self.send_response(200)
+            self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
+            self.send_header("Cache-Control", "no-cache")
+            self.end_headers()
+
+            def on_event(event: dict) -> None:
+                self.wfile.write((json.dumps(event, ensure_ascii=False) + "\n").encode())
+                self.wfile.flush()
+
+            try:
+                run_fn(on_event)
+            except TutorError as e:
+                on_event({"type": "error", "message": str(e)})
+            except (LLMError, LabError) as e:
+                on_event({"type": "error", "message": str(e)})
+            except Exception as e:  # never hide errors, but keep the stream open
+                on_event({"type": "error", "message": f"{type(e).__name__}: {e}"})
+
         def do_POST(self):
+            path = urlparse(self.path).path
+            body = {}
+            try:
+                body = self._read_json()
+            except TutorError as e:
+                self.send_json({"error": str(e)}, e.status)
+                return
+
+            if path == "/api/sessions":
+                question_id = str(body.get("question_id") or "")
+                if not question_id:
+                    self.send_json({"error": "question_id is required"}, 400)
+                    return
+                try:
+                    session = tutor_pipeline.create_session(
+                        conn, question_id, str(body.get("student_label") or ""))
+                    payload, _ = tutor_pipeline.fetch_question(conn, lab, question_id)
+                except TutorError as e:
+                    self.send_json({"error": str(e)}, e.status)
+                    return
+                except LabError as e:
+                    self.send_json({"error": str(e)}, e.status or 502)
+                    return
+                self.send_json({"session": session, "question": payload}, 201)
+                return
+
+            m = re.fullmatch(r"/api/sessions/(\d+)/(answer|reveal|hint)", path)
+            if m:
+                sid, action = int(m.group(1)), m.group(2)
+                if action == "hint":
+                    try:
+                        self.send_json({"hint_level": tutor_pipeline.bump_hint(conn, sid)})
+                    except TutorError as e:
+                        self.send_json({"error": str(e)}, e.status)
+                    return
+                if action == "answer":
+                    lines = body.get("lines")
+                    if not isinstance(lines, dict) or not lines:
+                        self.send_json({"error": 'send "lines": {"b": "..."}'}, 400)
+                        return
+                    self.stream_ndjson(lambda on_event: tutor_pipeline.answer_turn(
+                        conn, lab, ollama, sid, lines, think=body.get("think") is True,
+                        on_event=on_event))
+                    return
+                # reveal
+                self.stream_ndjson(lambda on_event: tutor_pipeline.reveal(
+                    conn, lab, ollama, sid, think=body.get("think") is True,
+                    on_event=on_event))
+                return
+
+            m = re.fullmatch(r"/api/turns/(\d+)/rating", path)
+            if m:
+                try:
+                    tutor_pipeline.rate_turn(conn, int(m.group(1)), int(body.get("rating", 0)))
+                    self.send_json({"ok": True})
+                except (TutorError, ValueError) as e:
+                    status = getattr(e, "status", 400)
+                    self.send_json({"error": str(e)}, status)
+                return
+
             self.send_json({"error": "not found"}, 404)
 
     return Handler
