@@ -1,1 +1,70 @@
-<html><body>aluno</body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutor Cambridge — Física 0625</title>
+<link rel="stylesheet" href="/student/style.css">
+</head>
+<body>
+<header>
+  <h1>Tutor Cambridge <span class="sub">IGCSE Physics 0625</span></h1>
+  <div id="status" class="status" title="Estado do servidor">
+    <span id="status-dot" class="dot off"></span>
+    <span id="status-text">conectando…</span>
+  </div>
+</header>
+
+<main>
+  <!-- seleção de questão -->
+  <section id="pick" class="card">
+    <h2>Escolha uma questão</h2>
+    <div id="question-list" class="qlist"></div>
+  </section>
+
+  <!-- questão aberta -->
+  <section id="quiz" class="hidden">
+    <div class="qhead">
+      <button id="back" class="ghost">← Outra questão</button>
+      <span id="q-meta" class="meta"></span>
+    </div>
+
+    <div class="card">
+      <div id="q-stem" class="stem"></div>
+      <div id="q-parts" class="parts"></div>
+      <div class="row">
+        <button id="send" class="primary">Enviar resposta</button>
+        <label class="marks-toggle"><input type="checkbox" id="show-marks"> mostrar marks</label>
+      </div>
+    </div>
+
+    <div id="feedback-card" class="card hidden">
+      <div class="fhead">
+        <h2>Feedback</h2>
+        <span id="turn-meta" class="meta"></span>
+      </div>
+      <div id="thinking" class="thinking hidden"><span class="spinner"></span> pensando…</div>
+      <div id="feedback" class="feedback"></div>
+      <div id="marks-summary" class="marks-summary hidden"></div>
+      <div id="rate" class="rate hidden">
+        Este feedback ajudou?
+        <button id="rate-up" class="ghost" title="👍">👍</button>
+        <button id="rate-down" class="ghost" title="👎">👎</button>
+      </div>
+      <div class="actions">
+        <button id="retry" class="primary">Tentar de novo</button>
+        <button id="hint">Dar outra pista</button>
+        <button id="reveal" class="danger">Mostrar solução</button>
+      </div>
+    </div>
+
+    <div id="error" class="error hidden"></div>
+  </section>
+</main>
+
+<footer>As respostas e o feedback ficam só nesta máquina. O tutor nunca revela o
+mark scheme antes da hora — peça “Mostrar solução” se precisar.</footer>
+
+<script type="module" src="/student/app.js"></script>
+</body>
+</html>

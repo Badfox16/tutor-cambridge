@@ -11,7 +11,8 @@ com modelos rodando via Ollama e dataset/notas vindas do **Marking Lab**
 - [x] **M2** Marker: `tutor/{render,parse,marker}.py`, run completa contra o Lab (limit 20 com `qwen3.5:9b`: 0 parse failures, acordo 55%, bias −1.2); perfis em `profiles.toml`.
 - [x] **M3** Painel v1: abas Visão geral, Acurácia, Etapas, Desempenho, Confiabilidade e Explorador de traces (`static/dashboard/`, JS puro + SVG); API de stats em `tutor/stats.py`; exportação CSV/JSON.
 - [x] **M4** Backend do tutor: sessões, escada de pistas (níveis 0–3), marking interno, leak check determinístico + regeneração + fallback, streaming NDJSON, cache de questões; **teste de contrato garante que nenhuma rota do aluno devolve scheme**. UI do aluno vem no M5.
-- [ ] M5 UI do aluno · [ ] M6 evals · [ ] M7 acabamento
+- [x] **M5** UI do aluno (`static/student/`, JS puro): seleção de questão, resposta por parte, feedback em streaming, escada de pistas visível, Tentar de novo / Dar outra pista / Mostrar solução / 👍👎, marks ocultas por padrão (aparecem no nível 3 ou quando acerta).
+- [ ] M6 evals · [ ] M7 acabamento
 
 ## Como rodar
 
@@ -61,6 +62,14 @@ qualquer flag da CLI sobrepõe o perfil. Ao experimentar, mude **uma coisa por
 vez** (modelo OU prompt OU think) e anote no `notes` da run.
 
 `/api/health` mostra Ollama, modelo carregado e o datasetVersion do Lab.
+
+## UI do aluno (`/student/`)
+
+JS puro (ES module, sem build). Seleciona questão → responde por parte →
+feedback em streaming com a escada de pistas visível ("tentativa N · pista
+nível K"). Botões: **Tentar de novo**, **Dar outra pista** (adianta o nível),
+**Mostrar solução** (com confirmação) e 👍/👎. As marks por parte ficam ocultas
+por padrão e aparecem no nível 3 ou quando a resposta fica toda correta.
 
 ## Tutor (modo socrático; scheme nunca sai do backend)
 

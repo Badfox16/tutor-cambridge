@@ -106,6 +106,13 @@ cases (baseline a bater). Scores detalhados só existem para run **open fechada*
 - **Conclusão:** infraestrutura do tutor pronta; qualidade do feedback (juiz, tamanho, PT) será medida no M6.
 - **Nota de higiene:** não usar schemes de questões avaliadas como exemplos few-shot do tutor.
 
+### [7] 2026-11-11 — M5 UI do aluno
+- **Motivo:** marco M5 — fluxo completo no navegador, mobile-friendly, em português.
+- **O que mudou:** `static/student/{index.html,style.css,app.js}` (JS puro, ES module, sem build); leitor de NDJSON streaming com `fetch` + `ReadableStream`; marks ocultas por padrão (aparecem no nível 3 ou quando o aluno acerta); estados de erro claros ("Ollama não está respondendo").
+- **Smoke real:** T1 nível 0 (`b 0/3` → pergunta-guia), `/hint` +1, T2 nível 2 com feedback socrático, 👍 gravado. 16 questões do Lab local listadas.
+- **Conclusão:** fluxo completo OK; aderência a tamanho/idioma do feedback será medida no M6 (evals).
+- **Nota:** fórmulas do modelo vêm com LaTeX cru (`$\rho = m/V$`) — renderizar bonito é opcional, registrar no M6 se incomodar no juiz de clareza.
+
 ---
 
 *Próximas entradas entram acima desta linha, com a comparação run vs. run.*
