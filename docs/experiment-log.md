@@ -102,6 +102,7 @@ cases (baseline a bater). Scores detalhados só existem para run **open fechada*
 - **Leak check:** (a) valor final A1 do scheme no feedback com nível<3; (b) n-grama de 6 palavras copiado do scheme; (c) linha "MARK SCHEME" (qualquer nível). Vazou → 1 regeneração com instrução rígida → ainda vazou → pergunta-guia genérica pré-escrita (contabilizado em `leak_flag`/`regenerated`).
 - **Teste de contrato:** suíte automatizada garante que **nenhuma** rota do aluno devolve texto de scheme (`test_contract_student.py`).
 - **Ambiente:** 75 testes offline OK (fakes). Lab online anotado (`http://102.202.45.215:3000`, mais questões; runs lá contam para a avaliação final — usar só com autorização do usuário).
+- **Smoke real (qwen3.5:9b, `dens-001` b, resposta correta):** marking interno `b 3/3` ✓; o 1º feedback citou "mark scheme" e o valor final → **leak check pegou ao vivo** (`leak_flag=1`, `regenerated=1`) → regeneração rígida entregou feedback limpo e socrático. Nenhum texto de scheme na rota de sessão (verificado contra o fixture).
 - **Conclusão:** infraestrutura do tutor pronta; qualidade do feedback (juiz, tamanho, PT) será medida no M6.
 - **Nota de higiene:** não usar schemes de questões avaliadas como exemplos few-shot do tutor.
 
