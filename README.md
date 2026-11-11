@@ -9,7 +9,8 @@ com modelos rodando via Ollama e dataset/notas vindas do **Marking Lab**
 - [x] **M0** Reconhecimento do Lab: `docs/marking-lab-contract.md`, `docs/lab-issues.md`, fixtures em `tests/fixtures/`.
 - [x] **M1** Esqueleto: `tutor/{config,db,lab,llm,trace,server}.py`, servidor em `TUTOR_PORT` (8780), SQLite em `data/tutor.db`, métricas do Ollama em `llm.py`; testes com Ollama/Lab falsos (`tests/`).
 - [x] **M2** Marker: `tutor/{render,parse,marker}.py`, run completa contra o Lab (limit 20 com `qwen3.5:9b`: 0 parse failures, acordo 55%, bias −1.2); perfis em `profiles.toml`.
-- [ ] M3 painel v1 · [ ] M4 backend do tutor · [ ] M5 UI do aluno · [ ] M6 evals · [ ] M7 acabamento
+- [x] **M3** Painel v1: abas Visão geral, Acurácia, Etapas, Desempenho, Confiabilidade e Explorador de traces (`static/dashboard/`, JS puro + SVG); API de stats em `tutor/stats.py`; exportação CSV/JSON.
+- [ ] M4 backend do tutor · [ ] M5 UI do aluno · [ ] M6 evals · [ ] M7 acabamento
 
 ## Como rodar
 
@@ -18,6 +19,28 @@ cp .env.example .env      # preencha MARKING_KEY (chave msk_... do Lab; nunca co
 python3 -m tutor.server   # http://localhost:8780  (aluno em /student/, painel em /dashboard/)
 python3 -m unittest discover -s tests -t .   # suíte offline (fakes, sem Ollama/Lab reais)
 ```
+
+### Painel (`/dashboard/`)
+
+Filtros por run e modelo no cabeçalho; abas:
+
+| Aba | O que mostra |
+|---|---|
+| **Visão geral** | Ollama/Lab no ar, modelo carregado (+VRAM), contagens e taxa de sucesso, runs recentes |
+| **Acurácia** | Score do Lab (acordo total/linha/ponto, MAE, bias com leitura guiada), lista de discordâncias com link para o trace |
+| **Etapas** | Tempo médio por stage, barra empilhada, p50/p95 e % de falhas |
+| **Desempenho** | tokens/s, TTFT, load cold vs. warm, tokens de prompt/geração, thinking, histograma de latência |
+| **Confiabilidade** | Parse failures com motivo, cortes por max_tokens, falhas por etapa |
+| **Traces** | Lista filtrável; clique abre prompt, resposta crua, parse e cascata de spans |
+
+Toda porcentagem vem com o tamanho da amostra (n). Exportação: `/api/export?run_id=N&format=csv|json`.
+
+### Diário de experimentos
+
+`docs/experiment-log.md` registra **o que mudou, por quê, o resultado e a conclusão**
+de cada passo, com legenda do que cada parâmetro (`model`, `prompt`, `think`,
+`temperature`, `num_ctx`, `max_tokens`, `keep_alive`, `repeats`, `limit`) controla
+e das métricas. Toda mudança de perfil deve virar uma entrada lá.
 
 ## Marker (corrigir respostas contra o mark scheme)
 

@@ -106,10 +106,12 @@ CREATE INDEX IF NOT EXISTS idx_turns_session ON turns(session_id);
 """
 
 
-def connect(path: Path) -> sqlite3.Connection:
+def connect(path: Path, *, check_same_thread: bool = True) -> sqlite3.Connection:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path, timeout=30)
+    # check_same_thread=False: the HTTP server answers requests from worker
+    # threads; WAL + short transactions keep this safe for our read-mostly use.
+    conn = sqlite3.connect(path, timeout=30, check_same_thread=check_same_thread)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
