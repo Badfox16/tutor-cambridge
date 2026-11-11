@@ -1,0 +1,383 @@
+{
+  "datasetVersion": 1,
+  "questions": [
+    {
+      "id": "dens-001",
+      "topic": "Density",
+      "syllabusRef": "1.4",
+      "tier": "Core",
+      "ao": "AO2",
+      "totalMarks": 7,
+      "markedMarks": 3,
+      "stem": "Fig. 1 shows a measuring cylinder containing water. Fig. 2 shows the same measuring cylinder after a stone has been lowered into it.\n[Fig. 1, Fig. 2: diagram not included]",
+      "lines": [
+        {
+          "label": "a",
+          "text": "Calculate the volume of the stone. [2]",
+          "marks": 2,
+          "answerLineUnit": null,
+          "marked": false
+        },
+        {
+          "label": "b",
+          "text": "Another stone has a mass of 98.4 g. The volume of this stone is 41.0 cm\u00b3. Calculate the density of the stone.\ndensity = ______ g/cm\u00b3 [3]",
+          "marks": 3,
+          "answerLineUnit": "g/cm\u00b3",
+          "marked": true
+        },
+        {
+          "label": "c",
+          "text": "The stone with a mass of 98.4 g has a weight of 0.984 N. Explain the difference between mass and weight. [2]",
+          "marks": 2,
+          "answerLineUnit": null,
+          "marked": false
+        }
+      ]
+    },
+    {
+      "id": "dens-002",
+      "topic": "Density",
+      "syllabusRef": "1.4",
+      "tier": "Core",
+      "ao": "AO2",
+      "totalMarks": 10,
+      "markedMarks": 7,
+      "stem": "Fig. 1 shows a coil of wire.\n[Fig. 1: diagram not included]",
+      "lines": [
+        {
+          "label": "a(i)",
+          "text": "A student measures the length of the coil using a ruler. His measurement is 3.8 cm. There are 20 turns of wire in the coil. The student uses his measurement to calculate the average thickness of the wire.\nShow that the average thickness of the wire is about 0.2 cm. [2]",
+          "marks": 2,
+          "answerLineUnit": null,
+          "marked": false
+        },
+        {
+          "label": "a(ii)",
+          "text": "A student measures the length of the coil using a ruler. His measurement is 3.8 cm. There are 20 turns of wire in the coil. The student uses his measurement to calculate the average thickness of the wire.\nThe student's measurement of 3.8 cm is inaccurate. Suggest one reason why the measurement is inaccurate. [1]",
+          "marks": 1,
+          "answerLineUnit": null,
+          "marked": false
+        },
+        {
+          "label": "b",
+          "text": "The volume of the wire in the coil is 16.6 cm\u00b3 and its mass is 148 g. Calculate the density of the metal used for the wire in the coil.\ndensity = ______ g/cm\u00b3 [3]",
+          "marks": 3,
+          "answerLineUnit": "g/cm\u00b3",
+          "marked": true
+        },
+        {
+          "label": "c",
+          "text": "The student has a measuring cylinder and a beaker of water, as shown in Fig. 2.\n[Fig. 2: diagram not included]\nDescribe how the student can determine the volume of the coil by using the equipment shown in Fig. 2. [4]",
+          "marks": 4,
+          "answerLineUnit": null,
+          "marked": true
+        }
+      ]
+    },
+    {
+      "id": "dens-003",
+      "topic": "Density",
+      "syllabusRef": "1.4",
+      "tier": "Core",
+      "ao": "AO2",
+      "totalMarks": 8,
+      "markedMarks": 3,
+      "stem": "A liquid-in-glass thermometer contains mercury.",
+      "lines": [
+        {
+          "label": "a(i)",
+          "text": "The mass of the mercury in the thermometer is 12 g.\nCalculate the weight of the mercury.\nweight of mercury = ______ N [3]",
+          "marks": 3,
+          "answerLineUnit": "N",
+          "marked": false
+        },
+        {
+          "label": "a(ii)",
+          "text": "The mass of the mercury in the thermometer is 12 g.\nThe 12 g of mercury has a volume of 0.88 cm\u00b3. Calculate the density of mercury.\ndensity of mercury = ______ g/cm\u00b3 [3]",
+          "marks": 3,
+          "answerLineUnit": "g/cm\u00b3",
+          "marked": true
+        },
+        {
+          "label": "b(i)",
+          "text": "The mercury in the thermometer expands when its temperature rises.\nState what happens to the mass of the mercury when its temperature rises. Tick (\u2713) one box: mass decreases / mass stays the same / mass increases.",
+          "marks": 1,
+          "answerLineUnit": null,
+          "marked": false
+        },
+        {
+          "label": "b(ii)",
+          "text": "The mercury in the thermometer expands when its temperature rises.\nState what happens to the density of the mercury when its temperature rises. Tick (\u2713) one box: density decreases / density stays the same / density increases.",
+          "marks": 1,
+          "answerLineUnit": null,
+          "marked": false
+        }
+      ]
+    }
+  ],
+  "fixtures": [
+    {
+      "answer": {
+        "id": "dens-001-a01",
+        "questionId": "dens-001",
+        "source": "synthetic",
+        "split": "open",
+        "tags": [
+          "fully-correct"
+        ],
+        "lines": {
+          "b": "density = mass \u00f7 volume\n= 98.4 \u00f7 41.0\n= 2.4 g/cm\u00b3"
+        }
+      },
+      "question": {
+        "id": "dens-001",
+        "topic": "Density",
+        "syllabusRef": "1.4",
+        "tier": "Core",
+        "ao": "AO2",
+        "totalMarks": 7,
+        "markedMarks": 3,
+        "stem": "Fig. 1 shows a measuring cylinder containing water. Fig. 2 shows the same measuring cylinder after a stone has been lowered into it.\n[Fig. 1, Fig. 2: diagram not included]",
+        "lines": [
+          {
+            "label": "a",
+            "text": "Calculate the volume of the stone. [2]",
+            "marks": 2,
+            "answerLineUnit": null,
+            "marked": false
+          },
+          {
+            "label": "b",
+            "text": "Another stone has a mass of 98.4 g. The volume of this stone is 41.0 cm\u00b3. Calculate the density of the stone.\ndensity = ______ g/cm\u00b3 [3]",
+            "marks": 3,
+            "answerLineUnit": "g/cm\u00b3",
+            "marked": true
+          },
+          {
+            "label": "c",
+            "text": "The stone with a mass of 98.4 g has a weight of 0.984 N. Explain the difference between mass and weight. [2]",
+            "marks": 2,
+            "answerLineUnit": null,
+            "marked": false
+          }
+        ]
+      },
+      "scheme": {
+        "markedMarks": 3,
+        "lines": [
+          {
+            "label": "b",
+            "marks": 3,
+            "points": [
+              {
+                "code": "C1",
+                "type": "method",
+                "marks": 1,
+                "text": "(density =) mass \u00f7 volume"
+              },
+              {
+                "code": "C1",
+                "type": "method",
+                "marks": 1,
+                "text": "(density =) 98.4 \u00f7 41.0"
+              },
+              {
+                "code": "A1",
+                "type": "final_answer",
+                "marks": 1,
+                "text": "2.4(0) (g/cm\u00b3)"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "answer": {
+        "id": "dens-001-a02",
+        "questionId": "dens-001",
+        "source": "synthetic",
+        "split": "open",
+        "tags": [
+          "no-working",
+          "value-without-unit"
+        ],
+        "lines": {
+          "b": "2.4"
+        }
+      },
+      "question": {
+        "id": "dens-001",
+        "topic": "Density",
+        "syllabusRef": "1.4",
+        "tier": "Core",
+        "ao": "AO2",
+        "totalMarks": 7,
+        "markedMarks": 3,
+        "stem": "Fig. 1 shows a measuring cylinder containing water. Fig. 2 shows the same measuring cylinder after a stone has been lowered into it.\n[Fig. 1, Fig. 2: diagram not included]",
+        "lines": [
+          {
+            "label": "a",
+            "text": "Calculate the volume of the stone. [2]",
+            "marks": 2,
+            "answerLineUnit": null,
+            "marked": false
+          },
+          {
+            "label": "b",
+            "text": "Another stone has a mass of 98.4 g. The volume of this stone is 41.0 cm\u00b3. Calculate the density of the stone.\ndensity = ______ g/cm\u00b3 [3]",
+            "marks": 3,
+            "answerLineUnit": "g/cm\u00b3",
+            "marked": true
+          },
+          {
+            "label": "c",
+            "text": "The stone with a mass of 98.4 g has a weight of 0.984 N. Explain the difference between mass and weight. [2]",
+            "marks": 2,
+            "answerLineUnit": null,
+            "marked": false
+          }
+        ]
+      },
+      "scheme": {
+        "markedMarks": 3,
+        "lines": [
+          {
+            "label": "b",
+            "marks": 3,
+            "points": [
+              {
+                "code": "C1",
+                "type": "method",
+                "marks": 1,
+                "text": "(density =) mass \u00f7 volume"
+              },
+              {
+                "code": "C1",
+                "type": "method",
+                "marks": 1,
+                "text": "(density =) 98.4 \u00f7 41.0"
+              },
+              {
+                "code": "A1",
+                "type": "final_answer",
+                "marks": 1,
+                "text": "2.4(0) (g/cm\u00b3)"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "answer": {
+        "id": "dens-001-a03",
+        "questionId": "dens-001",
+        "source": "synthetic",
+        "split": "open",
+        "tags": [
+          "inverted-formula"
+        ],
+        "lines": {
+          "b": "density = volume \u00f7 mass\n= 41.0 \u00f7 98.4\n= 0.42 g/cm\u00b3"
+        }
+      },
+      "question": {
+        "id": "dens-001",
+        "topic": "Density",
+        "syllabusRef": "1.4",
+        "tier": "Core",
+        "ao": "AO2",
+        "totalMarks": 7,
+        "markedMarks": 3,
+        "stem": "Fig. 1 shows a measuring cylinder containing water. Fig. 2 shows the same measuring cylinder after a stone has been lowered into it.\n[Fig. 1, Fig. 2: diagram not included]",
+        "lines": [
+          {
+            "label": "a",
+            "text": "Calculate the volume of the stone. [2]",
+            "marks": 2,
+            "answerLineUnit": null,
+            "marked": false
+          },
+          {
+            "label": "b",
+            "text": "Another stone has a mass of 98.4 g. The volume of this stone is 41.0 cm\u00b3. Calculate the density of the stone.\ndensity = ______ g/cm\u00b3 [3]",
+            "marks": 3,
+            "answerLineUnit": "g/cm\u00b3",
+            "marked": true
+          },
+          {
+            "label": "c",
+            "text": "The stone with a mass of 98.4 g has a weight of 0.984 N. Explain the difference between mass and weight. [2]",
+            "marks": 2,
+            "answerLineUnit": null,
+            "marked": false
+          }
+        ]
+      },
+      "scheme": {
+        "markedMarks": 3,
+        "lines": [
+          {
+            "label": "b",
+            "marks": 3,
+            "points": [
+              {
+                "code": "C1",
+                "type": "method",
+                "marks": 1,
+                "text": "(density =) mass \u00f7 volume"
+              },
+              {
+                "code": "C1",
+                "type": "method",
+                "marks": 1,
+                "text": "(density =) 98.4 \u00f7 41.0"
+              },
+              {
+                "code": "A1",
+                "type": "final_answer",
+                "marks": 1,
+                "text": "2.4(0) (g/cm\u00b3)"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "score_summary": {
+    "overall": {
+      "results": 3,
+      "parseFailures": 0,
+      "exactTotalAgreement": 0.6666666666666666,
+      "lineAgreement": 0.6666666666666666,
+      "pointAgreement": 0.6666666666666666,
+      "meanAbsError": 1,
+      "bias": 1
+    },
+    "clearCases": {
+      "results": 3,
+      "parseFailures": 0,
+      "exactTotalAgreement": 0.6666666666666666,
+      "lineAgreement": 0.6666666666666666,
+      "pointAgreement": 0.6666666666666666,
+      "meanAbsError": 1,
+      "bias": 1
+    },
+    "greyCases": {
+      "results": 0,
+      "parseFailures": 0,
+      "exactTotalAgreement": null,
+      "lineAgreement": null,
+      "pointAgreement": null,
+      "meanAbsError": null,
+      "bias": null
+    },
+    "repeatConsistency": {
+      "answersWithRepeats": 0,
+      "consistent": 0,
+      "rate": null
+    }
+  }
+}
