@@ -124,6 +124,27 @@ cases (baseline a bater). Scores detalhados só existem para run **open fechada*
 - **Resultado:** gemma 2/2 de acordo (qwen 1/2); gemma ~10 s/resposta a quente e 8–10 tok/s vs qwen 20 s e 3,7 tok/s. Cold load do gemma: ~5 min (disco lento).
 - **Conclusão:** gemma vira o padrão pela **velocidade** (confirmado). Acurácia com n=2 é ruído: confirmar com `--limit 5`+ nos dois antes de concluir algo.
 
+### [10] 2026-11-18 — `marker-rules` vs `marker-compact` (gemma4:e4b, mesmas 12 respostas)
+- **Motivo:** as 6 discordâncias da run 9 (75%) caíam em 3 padrões: C1 implícito por resposta final certa (dens-001-a06), arredondamento 13,6 → 14 (dens-003-a01), e pontos além do teto marcados 0 (therm-001/002). O `marker-rules` explica as convenções da Cambridge no prompt.
+- **Comparação:** run 9 (compact) vs run 10 (rules), think off, temp 0,2.
+- **Resultado:** acordo total 75% → **67%**, por ponto 72% → 68%, bias −0,42 → −0,25. Os casos-alvo **não mudaram** (dens-001-a06 e dens-003-a01 continuaram 2/3; pontos extras continuaram 0), e o modelo ficou generoso numa contradição (therm-002-a06).
+- **Conclusão:** **piorou.** Um modelo de 4B não aplica regras gerais escritas no prompt. Convenções que não exigem julgamento devem ir para **código**.
+
+### [11] 2026-11-18 — pós-processamento determinístico (`harness/post.py`) + `replay`
+- **O que mudou:** regras aplicadas depois do parse (chave `post` no perfil / `--post`):
+  `numeric` (A1=0 mas o último número da resposta, arredondado aos algarismos significativos do scheme, bate → A1=1; só sobe nota),
+  `implied` (A1 dado → todos os C1 da parte), `sum` (total = soma dos pontos com teto, ignorando a linha MARK do modelo).
+  Novo comando `python -m harness.run replay <run> --post ...`: reaproveita as saídas cruas da run salva, **sem chamar o modelo**, e submete como nova run no Lab → isola o efeito da regra.
+- **Comparação:** run 9 (compact, sem post) vs run 11 (replay da 9 com `numeric,implied,sum`) — saídas do modelo idênticas.
+- **Resultado:** acordo total 75% → **92%**, por parte 71% → 86%, por ponto 72% → 76%, MAE 0,42 → 0,25. Corrigiu exatamente dens-001-a06 (C1 implícito) e dens-003-a01 (13,6 ~ 14).
+- **Conclusão:** **melhorou muito, custo zero de modelo.** Estratégia para modelos pequenos: o modelo julga ponto a ponto, o código faz a contabilidade da Cambridge. Discordâncias restantes: dens-002-a06 (*grey*, disputado) e pontos extras = 0 (só afetam `pointAgreement`).
+
+### [12] 2026-11-18 — `marker-points` (compact + "julgue cada ponto sozinho, mesmo após o teto"), ambos com post
+- **Comparação:** run 11 (compact+post) vs run 12 (points+post), mesmas 12, temp 0,2.
+- **Resultado:** por ponto 76% → **80%**, mas acordo total 92% → **75%**. Ganhou therm-002-a01 (5/5 pontos), perdeu therm-002-a06 (contradição: deu 3, referência 1) e dens-003-a06 (*grey*, 13 600 kg/m³; mesma resposta virou de 3 para 2).
+- **Conclusão:** **inconclusivo.** A instrução ajuda nos pontos extras mas deixa o modelo generoso com contradições. Com n=12 e temp 0,2, uma única virada move 8 pontos percentuais → próxima etapa: as duas variantes nas **60 respostas, temp 0**.
+- **Hipótese anotada:** `numeric` poderia aceitar conversão de unidade (kg/m³ ↔ g/cm³, fator 1000) quando a unidade está escrita — regra geral da Cambridge (resposta certa em outra unidade certa), não específica da questão.
+
 ---
 
 *Próximas entradas entram acima desta linha, com a comparação run vs. run.*

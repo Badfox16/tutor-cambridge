@@ -29,3 +29,7 @@ prompt = "marker-rules"   # convenções gerais da Cambridge contra o viés nega
 [thinking]
 think = "on"
 max_tokens = 2048
+
+[points]
+prompt = "marker-points"  # compact + "judge each point on its own" (extra points beyond the cap)
+post = "numeric,implied,sum"

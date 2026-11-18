@@ -4,6 +4,8 @@
     python -m harness.run --profile gemma --limit 3
     python -m harness.run --question dens-001 --notes "test prompt v2"
     python -m harness.run list                         # past runs, side by side
+    python -m harness.run replay 10 --post implied,sum # re-mark run 10's saved model
+                                                       # outputs (no model calls)
 """
 
 from __future__ import annotations
@@ -14,7 +16,7 @@ import sys
 import time
 from datetime import datetime
 
-from . import config, llm, prompt
+from . import config, llm, post, prompt
 from .lab import Lab, LabError
 
 HARNESS_NAME = "tutor-cambridge"
@@ -30,12 +32,33 @@ def spread(items: list, n: int) -> list:
     return [items[i * len(items) // n] for i in range(n)]
 
 
-def run(p: dict, *, lab: Lab, chat=llm.chat, notes: str = "", log=print) -> dict:
-    """One full run. `lab` and `chat` are injectable for tests."""
-    template = prompt.load_template(p["prompt"])
+def replay_chat(record: dict):
+    """A `chat` that returns the saved output of a previous run instead of calling
+    the model, so only the post-processing changes between the two runs."""
+    by_prompt = {}
+    for a in record["answers"]:
+        by_prompt.setdefault(a["answerId"], []).append(a)
+
+    def chat(text, *, answer_id, repeat, **_):
+        saved = by_prompt[answer_id][repeat - 1]
+        return {"text": saved["raw"], **saved["metrics"]}
+    return chat
+
+
+def run(p: dict, *, lab: Lab, chat=llm.chat, notes: str = "", log=print,
+        replay: dict | None = None) -> dict:
+    """One full run. `lab` and `chat` are injectable for tests.
+    `replay` = a saved run record: reuse its answers and raw outputs."""
+    rules = post.parse_rules(p.get("post", ""))
+    if replay is not None:
+        chat = replay_chat(replay)
+        p = {**replay["profile"], "post": p.get("post", ""), "profile": p["profile"]}
+    template = replay["template"] if replay else prompt.load_template(p["prompt"])
     commit, dirty = config.git_state()
-    settings = {k: p[k] for k in ("think", "temperature", "num_ctx", "max_tokens",
-                                  "keep_alive", "profile")}
+    settings = {k: p.get(k) for k in ("think", "temperature", "num_ctx", "max_tokens",
+                                      "keep_alive", "profile", "post")}
+    if replay:
+        settings["replayOf"] = replay["lab_run_id"]
     lab_run = lab.create_run(
         harnessName=HARNESS_NAME, gitCommit=commit, dirty=dirty, model=p["model"],
         modelSettings=settings, split="open", usedMarkingScheme=True,
@@ -45,16 +68,24 @@ def run(p: dict, *, lab: Lab, chat=llm.chat, notes: str = "", log=print) -> dict
     record = {"lab_run_id": run_id, "dataset_version": version, "lab": lab.base,
               "started_at": datetime.now().isoformat(timespec="seconds"),
               "git_commit": commit, "dirty": dirty, "notes": notes,
-              "profile": p, "template": template, "answers": [], "score": None}
+              "profile": p, "template": template, "answers": [], "score": None,
+              "replay_of": replay["lab_run_id"] if replay else None}
     path = config.RUNS_DIR / f"{run_id:04d}.json"
 
     def save():
         config.RUNS_DIR.mkdir(exist_ok=True)
         path.write_text(json.dumps(record, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    answers = spread(lab.answers(run_id, p["question"]), int(p["limit"]))
+    if replay:
+        wanted = {a["answerId"] for a in replay["answers"]}
+        answers = [a for a in lab.answers(run_id) if a["id"] in wanted]
+        p = {**p, "repeats": max(a["repeat"] for a in replay["answers"])}
+    else:
+        answers = spread(lab.answers(run_id, p["question"]), int(p["limit"]))
     questions: dict[str, dict] = {}
-    log(f"Lab run {run_id} · {len(answers)} respostas · {p['model']} · prompt {p['prompt']}")
+    log(f"Lab run {run_id} · {len(answers)} respostas · {p['model']} · prompt {p['prompt']}"
+        + (f" · post {','.join(rules)}" if rules else "")
+        + (f" · replay da run {replay['lab_run_id']}" if replay else ""))
 
     t_run = time.perf_counter()
     for repeat in range(1, int(p["repeats"]) + 1):
@@ -65,12 +96,15 @@ def run(p: dict, *, lab: Lab, chat=llm.chat, notes: str = "", log=print) -> dict
             q = questions[qid]
             text = prompt.render(template, q, a["lines"])
             try:
+                kw = {"answer_id": a["id"], "repeat": repeat} if replay else {}
                 out = chat(text, model=p["model"], think=p["think"] == "on",
                            temperature=float(p["temperature"]), num_ctx=int(p["num_ctx"]),
-                           max_tokens=int(p["max_tokens"]), keep_alive=p["keep_alive"])
+                           max_tokens=int(p["max_tokens"]), keep_alive=p["keep_alive"], **kw)
                 parsed, reason = prompt.parse(out["text"], q, a["lines"])
             except llm.LLMError as e:
                 out, parsed, reason = {"text": "", "error": str(e)}, None, str(e)
+            model_parsed = parsed
+            parsed, changes = post.apply(parsed, q, a["lines"], rules)
 
             result = {"answerId": a["id"], "datasetVersion": version, "repeat": repeat,
                       "prompt": text, "rawOutput": out["text"], "reason": reason[:300],
@@ -81,7 +115,8 @@ def run(p: dict, *, lab: Lab, chat=llm.chat, notes: str = "", log=print) -> dict
 
             record["answers"].append({
                 "answerId": a["id"], "questionId": qid, "repeat": repeat,
-                "parsed": parsed, "reason": reason, "raw": out["text"],
+                "parsed": parsed, "model_parsed": model_parsed, "post_changes": changes,
+                "reason": reason, "raw": out["text"],
                 "metrics": {k: v for k, v in out.items() if k != "text"}})
             save()
             marks = ("  ".join(f"{k} {v['total']}" for k, v in parsed.items())
@@ -89,7 +124,8 @@ def run(p: dict, *, lab: Lab, chat=llm.chat, notes: str = "", log=print) -> dict
             secs = out.get("total_ms", 0) / 1000
             log(f"  [{n}/{len(answers)}] {a['id']:<16} {marks:<28} "
                 f"{secs:6.1f} s  {out.get('tokens_per_s', 0):5.1f} tok/s"
-                + ("  CUT-OFF" if out.get("cut_off") else ""))
+                + ("  CUT-OFF" if out.get("cut_off") else "")
+                + (f"  post: {'; '.join(changes)}" if changes else ""))
 
     lab.close(run_id)
     score = lab.score(run_id)
@@ -107,7 +143,8 @@ def summary_row(rec: dict) -> dict:
     m = [a["metrics"] for a in rec["answers"] if a["metrics"].get("total_ms")]
     avg = lambda k: sum(x.get(k) or 0 for x in m) / len(m) if m else 0  # noqa: E731
     return {"run": rec["lab_run_id"], "model": rec["profile"]["model"],
-            "prompt": rec["profile"]["prompt"], "think": rec["profile"]["think"],
+            "prompt": rec["profile"]["prompt"] + (f"+{rec['profile']['post']}" if rec["profile"].get("post") else ""),
+            "think": rec["profile"]["think"],
             "n": len(rec["answers"]), **{k: o.get(k) for k in SCORE_KEYS},
             "s/answer": round(avg("total_ms") / 1000, 1), "tok/s": round(avg("tokens_per_s"), 1),
             "notes": rec.get("notes", "")}
@@ -147,9 +184,10 @@ def list_runs() -> None:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="harness.run", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", nargs="?", default="run", choices=["run", "list"])
+    ap.add_argument("command", nargs="?", default="run", choices=["run", "list", "replay"])
+    ap.add_argument("replay_run", nargs="?", type=int, help="replay: saved run id (runs/<id>.json)")
     ap.add_argument("--profile", default="default")
-    for flag in ("model", "prompt", "keep_alive", "question"):
+    for flag in ("model", "prompt", "keep_alive", "question", "post"):
         ap.add_argument(f"--{flag.replace('_', '-')}", dest=flag)
     ap.add_argument("--think", choices=["on", "off"])
     ap.add_argument("--limit", type=int, help="max answers (0 = all)")
@@ -167,8 +205,15 @@ def main(argv: list[str] | None = None) -> int:
         p = config.load_profile(args.profile, vars(args))
     except KeyError as e:
         ap.error(str(e))
+    replay = None
+    if args.command == "replay":
+        if args.replay_run is None:
+            ap.error("replay needs a run id, e.g. `replay 10 --post implied`")
+        replay = json.loads((config.RUNS_DIR / f"{args.replay_run:04d}.json").read_text(encoding="utf-8"))
     try:
-        rec = run(p, lab=Lab(), notes=args.notes)
+        rec = run(p, lab=Lab(), notes=args.notes, replay=replay)
+    except ValueError as e:
+        ap.error(str(e))
     except LabError as e:
         print(f"Erro do Lab: {e}", file=sys.stderr)
         return 1

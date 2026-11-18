@@ -89,6 +89,19 @@ class TestRun(unittest.TestCase):
         rec = run.run(p, lab=lab, chat=full_marks_chat, log=lambda *_: None)
         self.assertTrue(all(a["questionId"] == qid for a in rec["answers"]))
 
+    def test_replay_reuses_raw_outputs_without_model(self):
+        first = run.run(self.profile, lab=FakeLab(), chat=full_marks_chat, log=lambda *_: None)
+        lab = FakeLab()
+
+        def no_model(*a, **kw):
+            raise AssertionError("replay must not call the model")
+        p = {**self.profile, "post": "sum"}
+        rec = run.run(p, lab=lab, chat=no_model, log=lambda *_: None, replay=first)
+        self.assertEqual([r["rawOutput"] for r in lab.submitted],
+                         [a["raw"] for a in first["answers"]])
+        self.assertEqual(lab.created["modelSettings"]["post"], "sum")
+        self.assertEqual(rec["replay_of"], 7)
+
     def test_spread_sample(self):
         self.assertEqual(run.spread(list(range(60)), 4), [0, 15, 30, 45])
         self.assertEqual(run.spread([1, 2], 5), [1, 2])

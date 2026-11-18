@@ -15,6 +15,7 @@ harness/
   lab.py      cliente do Marking Lab
   llm.py      chamada ao Ollama + métricas (load, prefill, tok/s, TTFT, cut-off)
   prompt.py   render do prompt + parser da resposta (mesmo layout do Lab)
+  post.py     regras determinísticas da Cambridge depois do parse (numeric, implied, sum)
   run.py      CLI: faz a run, grava runs/<id>.json, imprime o resumo
 prompts/      variantes de prompt (marker-compact.txt, marker-full.txt)
 profiles.toml perfis de run (modelo, prompt, think, limit...)
@@ -45,6 +46,8 @@ python -m harness.run --question dens-001               # só uma questão
 python -m harness.run --profile qwen --notes "qwen vs gemma, mesmo prompt"
 python -m harness.run --prompt marker-full --notes "prompt full vs compact"
 python -m harness.run list                              # tabela comparando as runs
+python -m harness.run --post numeric,implied,sum        # regras da Cambridge em código
+python -m harness.run replay 9 --post implied           # re-marca a run 9 sem chamar o modelo
 python -m unittest discover -s tests -t .               # testes (sem Lab/Ollama)
 ```
 

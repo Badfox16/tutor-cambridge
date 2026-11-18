@@ -42,6 +42,7 @@ DEFAULTS = {
     "repeats": 1,
     "limit": 5,          # few answers per run: the laptop is slow
     "question": "",      # only answers of this question id ("" = any)
+    "post": "",          # deterministic rules after parsing (harness/post.py), e.g. "numeric,implied,sum"
 }
 
 
