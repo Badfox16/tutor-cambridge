@@ -113,6 +113,12 @@ cases (baseline a bater). Scores detalhados só existem para run **open fechada*
 - **Conclusão:** fluxo completo OK; aderência a tamanho/idioma do feedback será medida no M6 (evals).
 - **Nota:** fórmulas do modelo vêm com LaTeX cru (`$\rho = m/V$`) — renderizar bonito é opcional, registrar no M6 se incomodar no juiz de clareza.
 
+### [8] 2026-11-18 — Simplificação: só o marker, Lab local, venv
+- **Motivo:** o objetivo é o melhor harness de marking (o Lab é o juiz comum); tutor/painel/UI do aluno não entram na nota. Máquina limitada (MX250, 2 GB VRAM).
+- **O que mudou:** pacote `harness/` com 5 módulos (config, lab, llm, prompt, run) no lugar de `tutor/` (14 módulos), sem SQLite: cada run grava `runs/<id>.json`; `python -m harness.run list` compara runs. `.venv` + `requirements.txt` (só stdlib). `.env` aponta para o Lab **local**. `limit = 5` por padrão, filtro `--question`. Cut-off agora vem do `done_reason` do Ollama. Versão anterior na tag `v0-tutor-completo`.
+- **Smoke (run 7, qwen3.5:9b, marker-compact, 2 respostas):** 0 parse failures, 1/2 de acordo, 20 s/resposta, 3,7 tok/s; modelo 94% CPU / 6% GPU.
+- **Observação:** a discordância (dens-001-a02) repete o padrão do [4]: o modelo tira marks de método quando a resposta final está certa, mas a referência dá todas as marks se a questão não pede "show your working". Boa hipótese para a próxima variante de prompt.
+
 ---
 
 *Próximas entradas entram acima desta linha, com a comparação run vs. run.*
