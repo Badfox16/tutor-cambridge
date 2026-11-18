@@ -145,6 +145,12 @@ cases (baseline a bater). Scores detalhados só existem para run **open fechada*
 - **Conclusão:** **inconclusivo.** A instrução ajuda nos pontos extras mas deixa o modelo generoso com contradições. Com n=12 e temp 0,2, uma única virada move 8 pontos percentuais → próxima etapa: as duas variantes nas **60 respostas, temp 0**.
 - **Hipótese anotada:** `numeric` poderia aceitar conversão de unidade (kg/m³ ↔ g/cm³, fator 1000) quando a unidade está escrita — regra geral da Cambridge (resposta certa em outra unidade certa), não específica da questão.
 
+### [13] 2026-11-18 — `numeric` com conversão de unidades
+- **O que mudou:** `numeric` agora lê o valor final como o aluno escreve ("13 600", "1,36 × 10⁴", "8.8 x 10^-7") e a unidade dele, e converte para a unidade do scheme (entre parênteses no A1, ou `answerLineUnit`) antes de comparar com arredondamento. Tabela de unidades por grandeza (densidade, massa, comprimento, volume, tempo, energia, potência…; temperatura fora por causa do offset). Mesmo número com unidade errada da mesma grandeza (14 kg/m³ para 14 g/cm³) ou de outra grandeza **não** ganha A1. Sem unidade → compara como escrito (como antes). Só sobe nota.
+- **Bug evitado:** o leitor anterior pegava "600" de "13 600".
+- **Comparação (replay, mesmas saídas do modelo):** run 9 → run 14: 92% (igual à run 11, nada regrediu). Run 12 → run 15: acordo total 75% → **83%**, por ponto 80% → 82%, bias −0,17 → −0,08; dens-003-a06 (13 600 kg/m³ = 13,6 g/cm³ ~ 14) agora certo.
+- **Conclusão:** **melhorou** (regra geral da Cambridge, não específica de questão). Nota: a run de 60 do compact que estava rodando usou o `numeric` antigo; comparar com o points só depois do replay dela com o código novo.
+
 ---
 
 *Próximas entradas entram acima desta linha, com a comparação run vs. run.*

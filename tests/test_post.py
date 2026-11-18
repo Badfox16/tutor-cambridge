@@ -65,5 +65,58 @@ class TestPost(unittest.TestCase):
         self.assertEqual(post.apply(parsed, Q_B1, {}, []), (parsed, []))
 
 
+class TestUnits(unittest.TestCase):
+    def test_normalize_unit(self):
+        for raw, want in [("g/cm³", "g/cm3"), ("kg m⁻³", "kg/m3"), ("kgm-3", "kg/m3"),
+                          ("g cm-3", "g/cm3"), ("m s-1", "m/s"), ("ohms", "Ω"), ("N.", "N")]:
+            self.assertEqual(post.normalize_unit(raw), want, raw)
+
+    def test_unit_info(self):
+        self.assertEqual(post.unit_info("g/cm³"), ("density", 1e3))
+        self.assertEqual(post.unit_info("g/mL"), ("density", 1e3))
+        self.assertEqual(post.unit_info("MW")[1], 1e6)
+        self.assertEqual(post.unit_info("mW")[1], 1e-3)
+        self.assertIsNone(post.unit_info("bananas"))
+
+    def test_scheme_unit(self):
+        self.assertEqual(post.scheme_unit("14 (g/cm³)"), "g/cm³")
+        self.assertEqual(post.scheme_unit("2.4(0) (g/cm³)"), "g/cm³")
+        self.assertIsNone(post.scheme_unit("coil submerged in water (owtte)"))
+
+    def test_final_value_forms(self):
+        self.assertEqual(post.final_value("= 13 600 kg/m³"), ("13600", 0, "kg/m³"))
+        self.assertEqual(post.final_value("= 1.36 × 10⁴ kg/m3"), ("1.36", 4, "kg/m3"))
+        self.assertEqual(post.final_value("= 1.36x10^4 kg/m3"), ("1.36", 4, "kg/m3"))
+        self.assertEqual(post.final_value("= 8.8 x 10^-7 m3"), ("8.8", -7, "m3"))
+        self.assertEqual(post.final_value("2.4 g/cm³ so it sinks"), ("2.4", 0, "g/cm³"))
+        self.assertEqual(post.final_value("2 x 100"), ("100", 0, None))
+        self.assertEqual(post.final_value("= 12 ÷ 0.88\n= 13.6"), ("13.6", 0, None))
+
+    def test_value_matches_with_conversion(self):
+        real = "m = 0.012 kg, V = 0.88 × 10⁻⁶ m³\nρ = m / V = 0.012 / 0.88 × 10⁻⁶\n= 13 600 kg/m³"
+        self.assertTrue(post.value_matches(real, "14", "g/cm³")[0])        # dens-003-a06
+        self.assertTrue(post.value_matches("= 1.36 × 10⁴ kg/m³", "14", "g/cm³")[0])
+        self.assertTrue(post.value_matches("= 2400 kg/m3", "2.4", "g/cm³")[0])
+        self.assertTrue(post.value_matches("= 13.6", "14", "g/cm³")[0])    # no unit: as written
+        self.assertTrue(post.value_matches("= 13.6 g/cm3", "14", "g/cm³")[0])
+
+    def test_value_matches_rejects_wrong_unit(self):
+        self.assertFalse(post.value_matches("= 14 kg/m³", "14", "g/cm³")[0])  # same number, wrong unit
+        self.assertFalse(post.value_matches("= 14 kg", "14", "g/cm³")[0])     # other quantity
+        self.assertFalse(post.value_matches("= 136 kg/m³", "14", "g/cm³")[0])
+
+    def test_apply_uses_answer_line_unit(self):
+        q = {"lines": [{"label": "b", "marks": 3, "marked": True, "answerLineUnit": "g/cm³",
+                        "points": [{"code": "C1", "marks": 1, "text": "m ÷ V"},
+                                   {"code": "C1", "marks": 1, "text": "98.4 ÷ 41.0"},
+                                   {"code": "A1", "marks": 1, "text": "2.4(0)"}]}]}
+        parsed = {"b": {"marks": [1, 1, 0], "total": 2}}
+        out, ch = post.apply(parsed, q, {"b": "= 2400 kg/m³"}, ["numeric", "sum"])
+        self.assertEqual(out["b"], {"marks": [1, 1, 1], "total": 3})
+        self.assertIn("kg/m³", ch[0])
+        out, _ = post.apply(parsed, q, {"b": "= 2.4 kg/m³"}, ["numeric", "sum"])
+        self.assertEqual(out["b"]["total"], 2)
+
+
 if __name__ == "__main__":
     unittest.main()
