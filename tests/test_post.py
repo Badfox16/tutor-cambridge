@@ -13,6 +13,8 @@ Q_B1 = {"lines": [{"label": "main", "marks": 3, "marked": True, "points": [
 class TestPost(unittest.TestCase):
     def test_parse_rules_order_and_unknown(self):
         self.assertEqual(post.parse_rules("sum, implied"), ["implied", "sum"])
+        self.assertEqual(post.parse_rules("implied,subst,a1check,numeric"),
+                         ["numeric", "a1check", "subst", "implied"])
         self.assertEqual(post.parse_rules(""), [])
         with self.assertRaises(ValueError):
             post.parse_rules("magic")
@@ -116,6 +118,52 @@ class TestUnits(unittest.TestCase):
         self.assertIn("kg/m³", ch[0])
         out, _ = post.apply(parsed, q, {"b": "= 2.4 kg/m³"}, ["numeric", "sum"])
         self.assertEqual(out["b"]["total"], 2)
+
+
+class TestDownRules(unittest.TestCase):
+    RULES = ["numeric", "a1check", "subst", "implied", "sum"]
+
+    def mark(self, model_marks, answer):
+        parsed = {"a(ii)": {"marks": model_marks, "total": sum(model_marks)}}
+        return post.apply(parsed, Q_CALC, {"a(ii)": answer}, self.RULES)[0]["a(ii)"]["marks"]
+
+    def test_substitution_numbers(self):
+        self.assertEqual(post.substitution_numbers("(ρ =) 148 ÷ 16.6"), [148.0, 16.6])
+        self.assertEqual(post.substitution_numbers("12 ÷ 0.88"), [12.0, 0.88])
+        self.assertIsNone(post.substitution_numbers("(density =) mass ÷ volume"))
+        self.assertIsNone(post.substitution_numbers("14 (g/cm³)"))
+
+    def test_power_of_ten_slip_loses_a1_and_not_implied(self):      # dens-003-a05
+        self.assertEqual(self.mark([1, 0, 1], "density = mass ÷ volume\n= 0.12 ÷ 0.88\n= 0.14 g/cm³"),
+                         [1, 0, 0])
+
+    def test_misread_data_loses_substitution(self):                  # dens-003-a08
+        self.assertEqual(self.mark([1, 1, 1], "density = mass ÷ volume\n= 12 ÷ 8.8\n= 1.4 g/cm³"),
+                         [1, 0, 0])
+
+    def test_correct_answers_untouched(self):
+        self.assertEqual(self.mark([1, 1, 1], "= 12 ÷ 0.88 = 13.6 g/cm³"), [1, 1, 1])
+        self.assertEqual(self.mark([1, 1, 1], "= 13 600 kg/m³"), [1, 1, 1])
+        self.assertEqual(self.mark([1, 1, 1], "14 g/cm³ (2 s.f.)"), [1, 1, 1])  # any value matches
+
+    def test_decimal_comma(self):                                    # dens-001-a08
+        self.assertEqual(post.readings("2,4"), ["2.4"])
+        self.assertEqual(post.readings("13,600"), ["13600", "13.600"])
+        self.assertEqual(post.final_value("98,4 / 41,0 = 2,4 g/cm³"), ("2.4", 0, "g/cm³"))
+        q = {"lines": [{"label": "b", "marks": 3, "marked": True, "answerLineUnit": "g/cm³", "points": [
+            {"code": "C1", "marks": 1, "text": "(density =) mass ÷ volume"},
+            {"code": "C1", "marks": 1, "text": "(density =) 98.4 ÷ 41.0"},
+            {"code": "A1", "marks": 1, "text": "2.4(0) (g/cm³)"}]}]}
+        parsed = {"b": {"marks": [1, 1, 1], "total": 3}}
+        ans = {"b": "a densidade é massa a dividir pelo volume\n98,4 / 41,0 = 2,4 g/cm³"}
+        self.assertEqual(post.apply(parsed, q, ans, self.RULES)[0], parsed)
+
+    def test_slash_division_is_not_a_unit(self):                     # dens-002-a04
+        self.assertIn(16.6, post.answer_numbers("= 148/16.6 = 89 g/cm³"))
+        self.assertEqual(post.final_value("= 148/16.6 = 89 g/cm³"), ("89", 0, "g/cm³"))
+
+    def test_wrong_answer_right_substitution_keeps_c1(self):
+        self.assertEqual(self.mark([1, 1, 1], "= 12 ÷ 0.88 = 1.36 g/cm³"), [1, 1, 0])
 
 
 if __name__ == "__main__":

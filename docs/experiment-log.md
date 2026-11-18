@@ -151,6 +151,19 @@ cases (baseline a bater). Scores detalhados só existem para run **open fechada*
 - **Comparação (replay, mesmas saídas do modelo):** run 9 → run 14: 92% (igual à run 11, nada regrediu). Run 12 → run 15: acordo total 75% → **83%**, por ponto 80% → 82%, bias −0,17 → −0,08; dens-003-a06 (13 600 kg/m³ = 13,6 g/cm³ ~ 14) agora certo.
 - **Conclusão:** **melhorou** (regra geral da Cambridge, não específica de questão). Nota: a run de 60 do compact que estava rodando usou o `numeric` antigo; comparar com o points só depois do replay dela com o código novo.
 
+### [14] 2026-11-18 — 60 respostas (split open inteiro), temp 0: compact vs points
+- **Runs:** 13 (`marker-compact`) e 16 (`marker-points`), ambos com `numeric,implied,sum` (o `numeric` antigo, sem unidades), temp 0, gemma4:e4b, ~11,7 s/resposta, 0 parse failures.
+- **Resultado:** compact 67% / points 70% de acordo total; **bias positivo** (+0,27 / +0,32).
+- **Ablação por replay** (mesmas saídas, só muda `post`): sem post 62% / 62%; `numeric` sozinho +5–6 pp; `implied` +1; `sum` 0. O bias já era positivo **sem** post (+0,17 / +0,22).
+- **Conclusão:** a amostra de 12 (a01/a06, quase só respostas certas) escondia que, no conjunto todo, o erro dominante é o modelo ser **generoso** com respostas erradas. n=12 enganou: daqui em diante, decisões só com as 60.
+
+### [15] 2026-11-18 — regras que descem nota: `a1check` e `subst` (+ vírgula decimal)
+- **Diagnóstico:** nos cálculos, o modelo dá A1 com o número final errado por potência de dez (0,14 / 1,4 para 14; 89 para 8,9; 0,024 para 2,4) e dá o C1 de substituição com os números errados (12 ÷ 8,8; 0,984 ÷ 41; 148 ÷ 3,8).
+- **O que mudou:** `a1check`: A1=1 mas **nenhum** número da resposta (com conversão de unidade) bate com o valor do scheme → A1=0. `subst`: C1 cujo texto é só uma substituição numérica ("12 ÷ 0.88"), A1 não dado e algum número ausente da resposta → C1=0. Ordem: numeric → a1check → subst → implied → sum. Também: **vírgula decimal** ("98,4 / 41,0 = 2,4", aluno lusófono; "13,600" ambíguo → regras que sobem nota leem milhar, regras que descem consideram as duas leituras) e bug de "148/16.6" (a unidade engolia "/16.6").
+- **Regressão encontrada e corrigida:** a 1ª versão tirou A1/C1 de dens-001-a08 (vírgula decimal) → corrigido antes de aceitar.
+- **Comparação (replay das mesmas saídas):** compact 68% → **75%** (bias +0,25 → +0,10); points 70% → **78%** (bias +0,32 → +0,20), MAE 0,37. Corrigidas nas duas: dens-001-a10, dens-002-a04, dens-002-a09, dens-003-a05, dens-003-a08; **nenhuma nova discordância**.
+- **Conclusão:** **melhorou.** Cálculo está praticamente resolvido em código. O que sobra é julgamento em explicações (B1): keyword stuffing (therm-001-a04, therm-002-a04, therm-003-a09), hedging/contradição (therm-001-a07, therm-002-a06), ciência errada com as palavras certas (therm-001-a10, therm-002-a08) — a maioria *grey*. Melhor config atual: **`marker-points` + `numeric,a1check,subst,implied,sum`, temp 0 → 78% (n=60)**.
+
 ---
 
 *Próximas entradas entram acima desta linha, com a comparação run vs. run.*

@@ -32,4 +32,5 @@ max_tokens = 2048
 
 [points]
 prompt = "marker-points"  # compact + "judge each point on its own" (extra points beyond the cap)
-post = "numeric,implied,sum"
+post = "numeric,a1check,subst,implied,sum"
+temperature = 0.0
