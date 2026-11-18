@@ -119,6 +119,11 @@ cases (baseline a bater). Scores detalhados só existem para run **open fechada*
 - **Smoke (run 7, qwen3.5:9b, marker-compact, 2 respostas):** 0 parse failures, 1/2 de acordo, 20 s/resposta, 3,7 tok/s; modelo 94% CPU / 6% GPU.
 - **Observação:** a discordância (dens-001-a02) repete o padrão do [4]: o modelo tira marks de método quando a resposta final está certa, mas a referência dá todas as marks se a questão não pede "show your working". Boa hipótese para a próxima variante de prompt.
 
+### [9] 2026-11-18 — gemma4:e4b vs qwen3.5:9b (mesmo prompt, mesmas 2 respostas)
+- **Runs:** 7 (qwen) vs 8 (gemma), `marker-compact`, think off, `--limit 2` (dens-001-a01, a02).
+- **Resultado:** gemma 2/2 de acordo (qwen 1/2); gemma ~10 s/resposta a quente e 8–10 tok/s vs qwen 20 s e 3,7 tok/s. Cold load do gemma: ~5 min (disco lento).
+- **Conclusão:** gemma vira o padrão pela **velocidade** (confirmado). Acurácia com n=2 é ruído: confirmar com `--limit 5`+ nos dois antes de concluir algo.
+
 ---
 
 *Próximas entradas entram acima desta linha, com a comparação run vs. run.*

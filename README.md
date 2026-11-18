@@ -42,7 +42,7 @@ cp .env.example .env                # ponha a chave do Lab local (../marking-lab
 python -m harness.run                                   # perfil [default], 5 respostas
 python -m harness.run --limit 2 --notes "teste rápido"
 python -m harness.run --question dens-001               # só uma questão
-python -m harness.run --profile gemma --notes "gemma vs qwen, mesmo prompt"
+python -m harness.run --profile qwen --notes "qwen vs gemma, mesmo prompt"
 python -m harness.run --prompt marker-full --notes "prompt full vs compact"
 python -m harness.run list                              # tabela comparando as runs
 python -m unittest discover -s tests -t .               # testes (sem Lab/Ollama)
@@ -57,8 +57,9 @@ resposta, métricas e o score completo do Lab. O painel do Lab
 
 ## Hardware (MX250, 2 GB de VRAM)
 
-Os modelos instalados (~6 GB) rodam ~94% na CPU: ~90 s no primeiro carregamento,
-depois ~15–25 s por resposta (~4 tok/s). Por isso: `limit = 5` por padrão,
+Modelo padrão: `gemma4:e4b` (~10 s/resposta, ~9 tok/s depois de carregado).
+O `qwen3.5:9b` (perfil `qwen`) roda 94% na CPU: ~20 s/resposta, ~4 tok/s.
+O primeiro carregamento de qualquer modelo demora de 1,5 a 5 min. Por isso: `limit = 5` por padrão,
 `num_ctx = 4096`, `keep_alive = 10m` (evita recarregar entre respostas) e um
 modelo por vez. Modelos menores (2–4B) cabem melhor na GPU e permitem iterar
 mais rápido; teste-os com `--model <tag>`.

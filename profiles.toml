@@ -6,7 +6,7 @@
 # (lento: ~4 tok/s, cold start ~90 s). Por isso limit baixo e num_ctx 4096.
 
 [default]
-model = "qwen3.5:9b"        # tag exata do Ollama (ollama list)
+model = "gemma4:e4b"        # tag exata do Ollama (ollama list); ~2x mais rápido que o qwen aqui
 prompt = "marker-compact"   # arquivo em prompts/ (sem .txt)
 think = "off"               # "on" = modo raciocínio (bem mais lento)
 temperature = 0.2
@@ -17,12 +17,12 @@ repeats = 1
 limit = 5                   # respostas por run (0 = todas)
 question = ""               # ex.: "dens-001" para só uma questão
 
-[gemma]
-model = "gemma4:e4b"
+[qwen]
+model = "qwen3.5:9b"
 
-[qwen-full-prompt]
+[full-prompt]
 prompt = "marker-full"
 
-[qwen-thinking]
+[thinking]
 think = "on"
 max_tokens = 2048
