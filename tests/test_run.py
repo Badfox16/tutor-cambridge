@@ -89,6 +89,11 @@ class TestRun(unittest.TestCase):
         rec = run.run(p, lab=lab, chat=full_marks_chat, log=lambda *_: None)
         self.assertTrue(all(a["questionId"] == qid for a in rec["answers"]))
 
+    def test_spread_sample(self):
+        self.assertEqual(run.spread(list(range(60)), 4), [0, 15, 30, 45])
+        self.assertEqual(run.spread([1, 2], 5), [1, 2])
+        self.assertEqual(run.spread([1, 2, 3], 0), [1, 2, 3])
+
     def test_profile_layers(self):
         p = config.load_profile("default", {"model": "x:1b", "limit": None})
         self.assertEqual(p["model"], "x:1b")

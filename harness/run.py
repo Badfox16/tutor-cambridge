@@ -22,6 +22,14 @@ SCORE_KEYS = ("results", "parseFailures", "exactTotalAgreement", "lineAgreement"
               "pointAgreement", "meanAbsError", "bias")
 
 
+def spread(items: list, n: int) -> list:
+    """n items evenly spaced over the list (deterministic), so a small sample
+    covers every question instead of the first one only. n <= 0 -> all."""
+    if n <= 0 or n >= len(items):
+        return items
+    return [items[i * len(items) // n] for i in range(n)]
+
+
 def run(p: dict, *, lab: Lab, chat=llm.chat, notes: str = "", log=print) -> dict:
     """One full run. `lab` and `chat` are injectable for tests."""
     template = prompt.load_template(p["prompt"])
@@ -44,9 +52,7 @@ def run(p: dict, *, lab: Lab, chat=llm.chat, notes: str = "", log=print) -> dict
         config.RUNS_DIR.mkdir(exist_ok=True)
         path.write_text(json.dumps(record, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    answers = lab.answers(run_id, p["question"])
-    if p["limit"]:
-        answers = answers[: int(p["limit"])]
+    answers = spread(lab.answers(run_id, p["question"]), int(p["limit"]))
     questions: dict[str, dict] = {}
     log(f"Lab run {run_id} · {len(answers)} respostas · {p['model']} · prompt {p['prompt']}")
 
