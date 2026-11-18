@@ -164,6 +164,12 @@ cases (baseline a bater). Scores detalhados só existem para run **open fechada*
 - **Comparação (replay das mesmas saídas):** compact 68% → **75%** (bias +0,25 → +0,10); points 70% → **78%** (bias +0,32 → +0,20), MAE 0,37. Corrigidas nas duas: dens-001-a10, dens-002-a04, dens-002-a09, dens-003-a05, dens-003-a08; **nenhuma nova discordância**.
 - **Conclusão:** **melhorou.** Cálculo está praticamente resolvido em código. O que sobra é julgamento em explicações (B1): keyword stuffing (therm-001-a04, therm-002-a04, therm-003-a09), hedging/contradição (therm-001-a07, therm-002-a06), ciência errada com as palavras certas (therm-001-a10, therm-002-a08) — a maioria *grey*. Melhor config atual: **`marker-points` + `numeric,a1check,subst,implied,sum`, temp 0 → 78% (n=60)**.
 
+### [16] 2026-11-18 — `marker-statements` (points + 2 linhas de julgamento em B1)
+- **O que mudou:** só o prompt: "A point needs a statement of what happens; a bare keyword or a list of words earns 0." e "If the answer says two contradicting things about a point, that point earns 0."
+- **Comparação:** lab 34 (points, replay com post completo) vs lab 35 (statements), mesmo post, temp 0, 60 respostas.
+- **Resultado:** acordo total 78% → **82%**, por parte 80% → 84%, por ponto 84% → **88%**, MAE 0,37 → 0,32, bias +0,20 → **+0,08**. Corrigidas: therm-001-a01, -a04 (keyword stuffing), -a05, -a10 (partículas erradas); nova discordância: therm-003-a05 (*grey*, "brilhante = bom absorvedor", agora 0 vs ref 1). 12 s/resposta, 0 parse failures.
+- **Conclusão:** **melhorou.** Ao contrário do `marker-rules` [10] (6 regras gerais), duas linhas curtas e concretas funcionaram no gemma de 4B. Restam: hedging/contradição (therm-001-a07, therm-002-a06), keyword stuffing em therm-002-a04/therm-003-a09, dens-002-a02/a05 (método de (c): esquecer de subtrair / hedge), e *grey*. Nova melhor config: **`statements` (= points + 2 linhas) + post completo, temp 0 → 82% (n=60)**.
+
 ---
 
 *Próximas entradas entram acima desta linha, com a comparação run vs. run.*
