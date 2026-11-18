@@ -34,3 +34,8 @@ max_tokens = 2048
 prompt = "marker-points"  # compact + "judge each point on its own" (extra points beyond the cap)
 post = "numeric,a1check,subst,implied,sum"
 temperature = 0.0
+
+[statements]
+prompt = "marker-statements"  # points + "statement, not keyword" + "contradiction = 0" (B1 judgment)
+post = "numeric,a1check,subst,implied,sum"
+temperature = 0.0
